@@ -1,0 +1,436 @@
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush, AreaChart, Area } from 'recharts';
+import { CSVLink } from "react-csv";
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Link } from 'react-router-dom';
+import './AppOverview.css';
+import data1 from './data.json';
+import data2 from './data2.json';
+
+const AppOverview = () => {
+  const [selectedAppId, setSelectedAppId] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [data, setData] = useState([]);
+  const [dateRangeType, setDateRangeType] = useState('daily');
+
+  const appOptions = [
+    { value: '12345', label: 'AppID: 12345' },
+    { value: '67890', label: 'AppID: 67890' }
+  ];
+
+  useEffect(() => {
+    setData(selectedAppId === '12345' ? data1 : selectedAppId === '67890' ? data2 : []);
+  }, [selectedAppId]);
+
+  const handleCalculate = () => {
+    let filteredData = selectedAppId === '12345' ? data1 : selectedAppId === '67890' ? data2 : [];
+    
+    filteredData = filteredData.filter(d => {
+      const date = new Date(d.name);
+      const filterStartDate = new Date(startDate);
+      const filterEndDate = new Date(endDate);
+      
+      if (dateRangeType === 'daily') {
+        return date >= filterStartDate && date <= filterEndDate;
+      } else if (dateRangeType === 'weekly') {
+        const weekStart = new Date(filterStartDate.setDate(filterStartDate.getDate() - filterStartDate.getDay()));
+        const weekEnd = new Date(filterEndDate.setDate(filterEndDate.getDate() - filterEndDate.getDay() + 6));
+        return date >= weekStart && date <= weekEnd;
+      } else if (dateRangeType === 'monthly') {
+        return date.getFullYear() === filterStartDate.getFullYear() && date.getMonth() === filterStartDate.getMonth();
+      }
+      return false;
+    });
+  
+    setData(filteredData);
+  };
+
+  const calculateCosts = (data) => data.map(d => ({
+    ...d,
+    actualCost: d.usage * 0.5,
+    potentialCost: d.usage < 50 ? d.usage * 0.5 * 0.7 : d.usage * 0.5,
+  }));
+
+  const processedData = calculateCosts(data);
+
+  const peekLoad = data.length > 0 ? Math.max(...data.map(d => d.usage)) : 0;
+  const minLoad = data.length > 0 ? Math.min(...data.map(d => d.usage)) : 0;
+  const costIncurred = data.reduce((acc, d) => acc + d.usage * 0.5, 0);
+  const potentialSavings = data.reduce((acc, d) => (d.usage < 50) ? acc + (d.usage * 0.5 * 0.3) : acc, 0);
+  const exportData = data.map(d => ({ date: d.name, usage: d.usage }));
+
+  return (
+    <div className="app-overview futuristic">
+      <div className="header glass-effect">
+        <div className="app-info">
+          <select
+            className="app-select neon-border"
+            value={selectedAppId}
+            onChange={(e) => setSelectedAppId(e.target.value)}
+          >
+            <option value="" disabled>Select App ID</option>
+            {appOptions.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <div className="date-picker-container">
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              selectsStart
+              startDate={startDate}
+              endDate={endDate}
+              placeholderText="Start date"
+              className="date-picker neon-border"
+            />
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              selectsEnd
+              startDate={startDate}
+              endDate={endDate}
+              minDate={startDate}
+              placeholderText="End date"
+              className="date-picker neon-border"
+            />
+          </div>
+          <div className="date-range-options">
+            {['daily', 'weekly', 'monthly'].map(type => (
+              <label key={type} className="radio-label">
+                <input
+                  type="radio"
+                  value={type}
+                  checked={dateRangeType === type}
+                  onChange={() => setDateRangeType(type)}
+                />
+                <span className="radio-custom"></span>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </label>
+            ))}
+          </div>
+        </div>
+        <button className="btn primary neon-effect" onClick={handleCalculate}>Apply Filter</button>
+        <div className="stats">
+          {[
+            { label: 'Peak Load', value: `${peekLoad}%` },
+            { label: 'Min Load', value: `${minLoad}%` },
+            { label: 'Cost Incurred', value: `$${costIncurred.toFixed(2)}` }
+          ].map(({ label, value }) => (
+            <div key={label} className="stat holographic">
+              <h5>{label}</h5>
+              <p>{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="chart-container">
+  <ResponsiveContainer width="100%" height={400}>
+    <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis label={{ value: 'Usage (%)', angle: -90, position: 'insideLeft' }} />
+      <Tooltip />
+      <Legend verticalAlign="top" height={36} />
+      <Area type="monotone" dataKey="usage" stroke="#4a90e2" fill="#4a90e2" fillOpacity={0.3} />
+      <Brush dataKey="name" height={30} stroke="#4a90e2" />
+    </AreaChart>
+  </ResponsiveContainer>
+</div>
+<div className="chart-container">
+  <ResponsiveContainer width="100%" height={400}>
+    <LineChart data={processedData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis label={{ value: 'Cost ($)', angle: -90, position: 'insideLeft' }} />
+      <Tooltip />
+      <Legend verticalAlign="top" height={36} />
+      <Line 
+        type="monotone" 
+        dataKey="actualCost" 
+        stroke="#e74c3c" 
+        strokeWidth={2} 
+        dot={{ stroke: '#e74c3c', strokeWidth: 2 }} 
+        activeDot={{ r: 8 }} 
+        name="Actual Cost" 
+      />
+      <Line 
+        type="monotone" 
+        dataKey="potentialCost" 
+        stroke="#85bb65" 
+        strokeWidth={2} 
+        dot={{ stroke: '#85bb65', strokeWidth: 2 }} 
+        activeDot={{ r: 8 }} 
+        name="Potential Cost" 
+      />
+      <Brush dataKey="name" height={30} stroke="#e74c3c" />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
+      <div className="footer glass-effect">
+        <div className="savings holographic">
+          <h5>Potential Savings</h5>
+          <p>${potentialSavings.toFixed(2)}</p>
+        </div>
+        <div className="buttons">
+          <CSVLink data={exportData} filename={"app-usage-data.csv"} className="btn secondary neon-effect">
+            Export Data
+          </CSVLink>
+          <Link to="/policy" className="btn primary neon-effect">Apply Policy</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AppOverview;
+
+html, body {
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+  line-height: 1.6;
+}
+
+.app-overview {
+  width: 100%;
+  min-height: 100vh;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Header Styles */
+.header {
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+.app-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.app-select,
+.date-picker {
+  padding: 0.5rem;
+  border: 1px solid #cccccc;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.date-picker-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.date-range-options {
+  display: flex;
+  gap: 1rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radio-label input {
+  margin-right: 0.25rem;
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.primary {
+  background-color: #0066cc;
+  color: #ffffff;
+}
+
+.secondary {
+  background-color: #808080;
+  color: #ffffff;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* Stats Styles */
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.stat {
+  background-color: #ffffff;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  text-align: center;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+  width: 30%;
+}
+
+.stat h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: #666666;
+}
+
+.stat p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #0066cc;
+}
+
+
+.chart-container {
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+
+.chart-container:nth-of-type(1) .recharts-line {
+  stroke: #0c3864;
+}
+
+.chart-container:nth-of-type(2) .recharts-line:nth-of-type(1) {
+  stroke: #cc0000;
+}
+
+.chart-container:nth-of-type(2) .recharts-line:nth-of-type(2) {
+  stroke: #800080;
+}
+
+
+.footer {
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+.savings {
+  text-align: center;
+}
+
+.savings h5 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  color: #666666;
+}
+
+.savings p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #008000;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 48rem) {
+  .app-info,
+  .stats,
+  .footer {
+    flex-direction: column;
+  }
+
+  .app-info > *,
+  .stats > *,
+  .footer > * {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+
+  .date-picker-container {
+    flex-direction: column;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    text-align: center;
+  }
+
+  .stat {
+    width: 100%;
+  }
+}
+
+@media (max-width: 30rem) {
+  html {
+    font-size: 14px;
+  }
+
+  .app-overview {
+    padding: 0.5rem;
+  }
+
+  .header,
+  .chart-container,
+  .footer {
+    padding: 0.75rem;
+  }
+}
+import json
+import random
+from datetime import datetime, timedelta
+
+# Generate 100 days of mock data
+start_date = datetime.now().date() - timedelta(days=100)
+data = []
+for i in range(100):
+    date = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
+    usage = random.randint(10, 100)  # Random usage between 10 and 100 (modify as needed)
+    data.append({'name': date, 'usage': usage})
+
+# Save data to JSON file
+with open('data.json', 'w') as f:
+    json.dump(data, f)
+data = []
+for i in range(100):
+    date = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
+    usage = random.randint(10, 100)  # Random usage between 10 and 100 (modify as needed)
+    data.append({'name': date, 'usage': usage})
+
+# Save data to JSON file
+with open('data2.json', 'w') as f:
+    json.dump(data, f)
+print("Data saved to data.json")
