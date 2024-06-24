@@ -1,0 +1,473 @@
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import styles from './Login.module.css';
+import { FaUser, FaLock, FaCloud, FaChartLine, FaEnvelope, FaBriefcase, FaUserTie } from 'react-icons/fa';
+import InvalidLoginPopup from './InvalidLoginPopup';
+
+const Login: React.FC = () => {
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [lineOfBusiness, setLineOfBusiness] = useState<string>('');
+  const [subLineOfBusiness, setSubLineOfBusiness] = useState<string>('');
+  const [manager, setManager] = useState<string>('');
+  const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [popupMessage, setPopupMessage] = useState<string>('');
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isLogin) {
+      if (username === 'abid' && password === 'abid') {
+        console.log('Login successful');
+      } else {
+        setPopupMessage('Invalid credentials. Please try again.');
+        setShowPopup(true);
+      }
+    } else {
+      console.log('Signup attempted with:', {
+        username,
+        email,
+        password,
+        confirmPassword,
+        lineOfBusiness,
+        subLineOfBusiness,
+        manager
+      });
+    }
+  };
+
+  const handleFlipCard = () => {
+    setIsFlipped(!isFlipped);
+    setIsLogin(!isLogin);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  return (
+    <div className={`${styles.loginContainer} ${isFlipped ? styles.flipped : ''}`}>
+      <div className={styles.loginCard}>
+        {isLogin ? (
+          <>
+            <div className={styles.cardLeft}>
+              <div className={styles.brand}>
+                <FaCloud className={styles.logo} />
+                <h1>Cloudifi</h1>
+              </div>
+              <p className={styles.tagline}>Optimizing your cloud, maximizing your savings</p>
+              <FaChartLine className={styles.chartIcon} />
+            </div>
+            <div className={styles.cardRight}>
+              <form className={styles.loginForm} onSubmit={handleSubmit}>
+                <h2>Access Your Dashboard</h2>
+                <div className={styles.inputGroup}>
+                  <FaUser className={styles.inputIcon} />
+                  <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                    required
+                  />
+                  <label htmlFor="username">Username</label>
+                </div>
+                <div className={styles.inputGroup}>
+                  <FaLock className={styles.inputIcon} />
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    required
+                  />
+                  <label htmlFor="password">Password</label>
+                </div>
+                <button type="submit" className={styles.loginButton}>
+                  <span>Log In</span>
+                  <div className={styles.buttonEffect}></div>
+                </button>
+                <div className={styles.links}>
+                  <a href="#forgot-password" className={styles.forgotPassword}>Forgot Credentials?</a>
+                  <a href="#" className={styles.signup} onClick={handleFlipCard}>New user? Sign Up</a>
+                </div>
+              </form>
+            </div>
+          </>
+        ) : (
+          <div className={styles.signupForm}>
+            <h2>Sign Up for Cloudifi</h2>
+            <form onSubmit={handleSubmit}>
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <FaUser className={styles.inputIcon} />
+                  <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                    required
+                    placeholder="Username"
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <FaEnvelope className={styles.inputIcon} />
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    required
+                    placeholder="Email"
+                  />
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <FaLock className={styles.inputIcon} />
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    required
+                    placeholder="Password"
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <FaLock className={styles.inputIcon} />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="Confirm Password"
+                  />
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <FaBriefcase className={styles.inputIcon} />
+                  <select
+                    id="lineOfBusiness"
+                    value={lineOfBusiness}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setLineOfBusiness(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Line of Business</option>
+                    <option value="CT">CT</option>
+                    <option value="CTBT">CTBT</option>
+                    <option value="AT">AT</option>
+                    <option value="HR">HR</option>
+                  </select>
+                </div>
+                <div className={styles.inputGroup}>
+                  <FaBriefcase className={styles.inputIcon} />
+                  <select
+                    id="subLineOfBusiness"
+                    value={subLineOfBusiness}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setSubLineOfBusiness(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Sub-Line of Business</option>
+                    <option value="Tech1">Tech 1</option>
+                    <option value="Tech2">Tech 2</option>
+                    <option value="Tech3">Tech 3</option>
+                  </select>
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <FaUserTie className={styles.inputIcon} />
+                  <select
+                    id="manager"
+                    value={manager}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setManager(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Manager</option>
+                    <option value="Manager1">Manager 1</option>
+                    <option value="Manager2">Manager 2</option>
+                    <option value="Manager3">Manager 3</option>
+                    <option value="Manager4">Manager 4</option>
+                    <option value="Manager5">Manager 5</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className={styles.loginButton}>
+                <span>Sign Up</span>
+                <div className={styles.buttonEffect}></div>
+              </button>
+              <div className={styles.links}>
+                <a href="#" onClick={handleFlipCard}>Already have an account? Log In</a>
+              </div>
+            </form>
+          </div>
+        )}
+        {showPopup && (
+          <InvalidLoginPopup message={popupMessage} onClose={closePopup} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Login;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e0e2e5 100%);
+}
+
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 2rem;
+}
+
+.loginCard {
+  display: flex;
+  background-color: white;
+  border-radius: 1.25rem;
+  box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 80%;
+  max-width: 75rem;
+  height: 37.5rem;
+}
+
+.cardLeft {
+  flex: 1;
+  background: linear-gradient(135deg, #D71E28 0%, #B11116 100%);
+  color: white;
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  font-size: 3rem;
+  margin-right: 1rem;
+  color: #FFCD11;
+}
+
+.brand h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.tagline {
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.chartIcon {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  font-size: 4rem;
+  color: #FFCD11;
+  opacity: 0.5;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.5rem);
+  }
+}
+
+.cardRight, .signupForm {
+  flex: 1;
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.loginForm, .signupForm form {
+  width: 100%;
+}
+
+h2 {
+  color: #D71E28;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.inputGroup {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.inputIcon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: #D71E28;
+  font-size: 1.2rem;
+  z-index: 1;
+}
+
+input, select {
+  width: calc(100% - 3rem);
+  padding: 1rem;
+  padding-left: 3rem;
+  border: 0.125rem solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  border-color: #D71E28;
+  box-shadow: 0 0 0 0.125rem rgba(215, 30, 40, 0.2);
+}
+
+label {
+  position: absolute;
+  top: 50%;
+  left: 3rem;
+  transform: translateY(-50%);
+  color: #888;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+input:focus + label,
+input:not(:placeholder-shown) + label {
+  top: 0;
+  font-size: 0.8rem;
+  background-color: white;
+  padding: 0 0.5rem;
+  color: #D71E28;
+}
+
+.loginButton {
+  width: 100%;
+  padding: 1rem;
+  background-color: #D71E28;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.loginButton span {
+  position: relative;
+  z-index: 1;
+}
+
+.buttonEffect {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.loginButton:hover {
+  background-color: #B11116;
+}
+
+.loginButton:hover .buttonEffect {
+  left: 100%;
+}
+
+.links {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.links a {
+  color: #D71E28;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.links a:hover {
+  color: #B11116;
+}
+
+.formRow {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.formRow .inputGroup {
+  width: 48%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .formRow .inputGroup {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .loginCard {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .cardLeft, .cardRight, .signupForm {
+    padding: 2rem;
+  }
+
+  .formRow {
+    flex-direction: column;
+  }
+
+  .formRow .inputGroup {
+    width: 100%;
+  }
+
+  .signupForm input,
+  .signupForm select {
+    height: 3rem;
+  }
+
+  .signupForm {
+    height: auto;
+  }
+}
+
+.signup {
+  display: block;
+  margin-top: 0.625rem;
+}
