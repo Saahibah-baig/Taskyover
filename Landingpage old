@@ -1,0 +1,132 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styles from "./Landingpage.module.css"; // Adjust the import path as needed
+import { MdDelete, MdAppRegistration, MdAccountBox } from "react-icons/md";
+import { RxUpdate } from "react-icons/rx";
+import { FaUserEdit, FaCogs, FaChartLine } from "react-icons/fa";
+
+interface Button {
+  label: string;
+  icon: JSX.Element;
+  route: string;
+}
+
+const roles = {
+  admin: 'admin',
+  developer: 'developer',
+  executive: 'executive',
+};
+
+const actionButtons: Record<string, Button[]> = {
+  admin: [
+    { label: 'Update Application Limit', icon: <RxUpdate />, route: '/update-app-limit' },
+    { label: 'Update User Limit', icon: <FaUserEdit />, route: '/update-user-limit' },
+    { label: 'Update Instance Type', icon: <FaCogs />, route: '/update-instance-type' },
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+    { label: 'Manage User Accounts', icon: <MdAccountBox />, route: '/manage-user-accounts' },
+  ],
+  developer: [
+    { label: 'Create New App', icon: <MdAppRegistration />, route: '/create-app' },
+    { label: 'Delete App', icon: <MdDelete />, route: '/delete-app' },
+    { label: 'Request Threshold Change', icon: <FaUserEdit />, route: '/request-threshold-change' },
+    { label: 'Change Policy per App', icon: <FaCogs />, route: '/change-policy-app' },
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+  ],
+  executive: [
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+  ],
+};
+
+const getUserRole = () => {
+  return roles.admin;
+};
+
+const Landingpage = () => {
+  const navigate = useNavigate();
+  const role = getUserRole();
+
+  const renderButtons = () => {
+    return actionButtons[role].map((button: Button, index: number) => ( // Explicitly type 'button' as Button interface
+      <div key={index} className={styles.tile} onClick={() => navigate(button.route)}>
+        <div className={styles.tileIcon}>{button.icon}</div>
+        <div className={styles.tileLabel}>{button.label}</div>
+      </div>
+    ));
+  };
+
+  return (
+    <div className={styles.dashboardContainer}>
+      <h1>{`${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`}</h1>
+      <div className={styles.buttonContainer}>
+        {renderButtons()}
+      </div>
+    </div>
+  );
+};
+
+export default Landingpage;
+.dashboardContainer {
+  text-align: center;
+  padding: 50px;
+  background: #ffffff;
+  height: 100vh;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.tile {
+  background-color: #f13919;
+  color: white;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.tileIcon {
+  font-size: 80px;
+  margin-bottom: 10px;
+  color: rgb(228, 186, 17);
+}
+
+.tileLabel {
+  font-size: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.tile:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  animation: pulse 0.9s infinite;
+}
+
+.dashboardContainer h1 {
+  font-size: 50px;
+  margin-bottom: 40px;
+  color: #000000;
+  font-family: 'Arial', sans-serif;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
