@@ -1,0 +1,361 @@
+import React, { useState } from 'react';
+import styles from './User.module.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
+import usersData from './profile.json';
+
+interface UserType {
+  id: number;
+  username: string;
+  role: string;
+  email: string;
+  lineOfBusiness: string;
+  subLineOfBusiness: string;
+  manager: string;
+  status: string;
+}
+
+interface PopupType {
+  visible: boolean;
+  userId: number | null;
+  type: string;
+}
+
+const User: React.FC = () => {
+  const [userList, setUserList] = useState<UserType[]>(usersData);
+  const [popup, setPopup] = useState<PopupType>({ visible: false, userId: null, type: '' });
+  const [unblockTimers, setUnblockTimers] = useState<{ [key: number]: number }>({});
+
+  const updateUserStatus = (id: number, status: string) => {
+    setUserList(userList.map(user => user.id === id ? { ...user, status } : user));
+    if (status === 'blocked') {
+      setUnblockTimers(prev => ({ ...prev, [id]: Date.now() + 3 * 24 * 60 * 60 * 1000 }));
+    }
+  };
+
+  const handleAccept = (id: number) => {
+    updateUserStatus(id, 'accepted');
+  };
+
+  const handleDecline = (id: number) => {
+    updateUserStatus(id, 'declined');
+  };
+
+  const handleBlock = (id: number) => {
+    setPopup({ visible: true, userId: id, type: 'block' });
+  };
+
+  const handleRemove = (id: number) => {
+    setPopup({ visible: true, userId: id, type: 'remove' });
+  };
+
+  const confirmBlock = (id: number) => {
+    updateUserStatus(id, 'blocked');
+    setPopup({ visible: false, userId: null, type: '' });
+  };
+
+  const confirmRemove = (id: number) => {
+    setUserList(userList.filter(user => user.id !== id));
+    setPopup({ visible: false, userId: null, type: '' });
+  };
+
+  const handleUnblock = (id: number) => {
+    alert(`User cannot be unblocked for another ${(unblockTimers[id] - Date.now()) / (1000 * 60 * 60 * 24)} days.`);
+  };
+
+  return (
+    <div className={styles.managementContainer}>
+      <h2 className={styles.title}>User Management</h2>
+      <ul className={styles.userList}>
+        {userList.map(user => (
+          <li key={user.id} className={styles.userItem}>
+            <div className={styles.userName}>
+              <FontAwesomeIcon icon={faUser} className={styles.userNameIcon} />
+              {user.username}
+              <div className={styles.tooltipCard}>
+                <p><strong>Username:</strong> {user.username}</p>
+                <p><strong>Role:</strong> {user.role}</p>
+                <p><strong>Email:</strong> {user.email}</p>
+                <p><strong>Line of Business:</strong> {user.lineOfBusiness}</p>
+                <p><strong>Sub Line of Business:</strong> {user.subLineOfBusiness}</p>
+                <p><strong>Reports to:</strong> {user.manager}</p>
+              </div>
+            </div>
+            <div className={styles.buttonGroup}>
+              {user.status === 'pending' && (
+                <>
+                  <button className={`${styles.button} ${styles.acceptButton}`} onClick={() => handleAccept(user.id)}>Accept</button>
+                  <button className={`${styles.button} ${styles.declineButton}`} onClick={() => handleDecline(user.id)}>Decline</button>
+                </>
+              )}
+              {user.status === 'accepted' && (
+                <button className={`${styles.button} ${styles.blockButton}`} onClick={() => handleBlock(user.id)}>Block</button>
+              )}
+              {user.status === 'blocked' && (
+                <button className={`${styles.button} ${styles.unblockButton}`} onClick={() => handleUnblock(user.id)} disabled={unblockTimers[user.id] > Date.now()}>Unblock</button>
+              )}
+              {user.status !== 'pending' && user.status !== 'blocked' && (
+                <button className={`${styles.button} ${styles.removeButton}`} onClick={() => handleRemove(user.id)}>Remove</button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {popup.visible && (
+        <div className={styles.popup}>
+          <div className={styles.popupContent}>
+            {popup.type === 'block' && (
+              <>
+                <p>Once a user is blocked, they cannot be unblocked for another 3 business days. Are you sure?</p>
+                <button className={`${styles.button} ${styles.confirmButton}`} onClick={() => confirmBlock(popup.userId!)}>Confirm</button>
+              </>
+            )}
+            {popup.type === 'remove' && (
+              <>
+                <p>Once a user is removed, they cannot be added back for another 5 business days. Are you sure?</p>
+                <button className={`${styles.button} ${styles.confirmButton}`} onClick={() => confirmRemove(popup.userId!)}>Confirm</button>
+              </>
+            )}
+            <button className={`${styles.button} ${styles.cancelButton}`} onClick={() => setPopup({ visible: false, userId: null, type: '' })}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default User;
+/* User.module.css */
+
+:root {
+    --primary-color: #a51d2d; 
+    --secondary-color: #ffd700; 
+    --background-color: #f1f1f1;
+    --text-color: #333;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+  }
+  
+  .managementContainer {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    max-width: 800px;
+    margin: 40px auto;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .title {
+    color: var(--primary-color);
+    text-align: center;
+    font-family: 'Helvetica', sans-serif;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    position: relative;
+  }
+  
+  .title::after {
+    content: "";
+    display: block;
+    width: 50px;
+    height: 4px;
+    background: var(--secondary-color);
+    margin: 8px auto;
+    border-radius: 2px;
+  }
+  
+  .userList {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .userItem {
+    background-color: #fff;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: var(--box-shadow);
+    position: relative;
+    transition: box-shadow var(--transition-speed);
+  }
+  
+  .userItem:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .userName {
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .userNameIcon {
+    margin-right: 10px;
+    color: var(--primary-color);
+    font-size: 1.5em;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-family: 'Arial', sans-serif;
+    transition: background-color var(--transition-speed);
+    color: #fff;
+  }
+  
+  .acceptButton {
+    background-color: #1b5e20; 
+  }
+  
+  .acceptButton:hover {
+    background-color: #144d14;
+  }
+  
+  .declineButton {
+    background-color: #d32f2f; 
+  }
+  
+  .declineButton:hover {
+    background-color: #b71c1c;
+  }
+  
+  .blockButton {
+    background-color: #ffab00; 
+  }
+  
+  .blockButton:hover {
+    background-color: #ff8f00;
+  }
+  
+  .removeButton {
+    background-color: #757575; 
+  }
+  
+  .removeButton:hover {
+    background-color: #616161;
+  }
+  
+  .unblockButton {
+    background-color: #ffa500; 
+    cursor: not-allowed;
+  }
+  
+  .tooltipCard {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    top: 40px; 
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    pointer-events: none; 
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 0;
+    visibility: hidden;
+  }
+  
+  .userName:hover .tooltipCard {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .tooltipCard p {
+    margin: 5px 0;
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+  }
+  
+  .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  }
+  
+  .popupContent {
+    background: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+  }
+  
+  .popup button {
+    margin: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+    color: #fff;
+  }
+  
+  .popup .confirmButton {
+    background-color: #d32f2f; 
+  }
+  
+  .popup .confirmButton:hover {
+    background-color: #b71c1c;
+  }
+  
+  .popup .cancelButton {
+    background-color: #757575; 
+  }
+  
+  .popup .cancelButton:hover {
+    background-color: #616161;
+  }
+  [
+    {
+      "id": 1,
+      "username": "johndoe",
+      "email": "johndoe@example.com",
+      "status": "pending",
+      "role": "Developer",
+      "lineOfBusiness": "IT",
+      "subLineOfBusiness": "Software Development",
+      "manager": "Jane Smith"
+    },
+    {
+      "id": 2,
+      "username": "janedoe",
+      "email": "janedoe@example.com",
+      "status": "pending",
+      "role": "Project Manager",
+      "lineOfBusiness": "IT",
+      "subLineOfBusiness": "Project Management",
+      "manager": "John Smith"
+    }
+  ]
+  
