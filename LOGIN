@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import styles from './Login.module.css';
 import { FaUser, FaLock, FaCloud, FaChartLine, FaEnvelope, FaBriefcase, FaUserTie } from 'react-icons/fa';
 import InvalidLoginPopup from './InvalidLoginPopup';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 
 const Login: React.FC = () => {
   const [isLogin, setIsLogin] = useState<boolean>(true);
@@ -16,11 +17,13 @@ const Login: React.FC = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [popupMessage, setPopupMessage] = useState<string>('');
 
+  const navigate = useNavigate(); 
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isLogin) {
       if (username === 'abid' && password === 'abid') {
-        console.log('Login successful');
+        navigate("/landingpage"); 
       } else {
         setPopupMessage('Invalid credentials. Please try again.');
         setShowPopup(true);
@@ -216,6 +219,7 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
 
 body {
