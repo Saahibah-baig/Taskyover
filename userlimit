@@ -1,0 +1,383 @@
+import React, { useState, useEffect } from 'react';
+import { FaUser, FaLightbulb, FaSearch, FaCloudUploadAlt, FaCloudDownloadAlt } from 'react-icons/fa';
+import styles from './Userlimit.module.css'; 
+
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  appLimit: number;
+  smartifiApps: number;
+}
+
+const UserLimit: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([
+    { id: 1, username: 'CloudMaster', email: 'cloudmaster@skynet.com', appLimit: 5, smartifiApps: 3 },
+    { id: 2, username: 'DataWizard', email: 'datawizard@cloudify.io', appLimit: 3, smartifiApps: 2 },
+    { id: 3, username: 'NetNinja', email: 'netninja@cloudscape.net', appLimit: 7, smartifiApps: 5 },
+    { id: 4, username: 'ByteBoss', email: 'byteboss@cloudhaven.com', appLimit: 2, smartifiApps: 1 },
+    { id: 5, username: 'CodeCrusader', email: 'codecrusader@nimbus.cloud', appLimit: 4, smartifiApps: 3 },
+  ]);
+
+  const [popup, setPopup] = useState<{ visible: boolean; userId: number | null; inputValue: number }>({
+    visible: false,
+    userId: null,
+    inputValue: 1,
+  });
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
+
+  useEffect(() => {
+    setFilteredUsers(
+      users.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [searchTerm, users]);
+
+  const handleUpdateLimit = (userId: number, newLimit: number) => {
+    setUsers(users.map(user => (user.id === userId ? { ...user, appLimit: newLimit } : user)));
+    closePopup();
+  };
+
+  const showPopup = (userId: number) => {
+    setPopup({ visible: true, userId, inputValue: users.find(user => user.id === userId)?.appLimit || 1 });
+  };
+
+  const closePopup = () => {
+    setPopup({ visible: false, userId: null, inputValue: 1 });
+  };
+
+  return (
+    <div className={styles['cloud-user-management']}>
+      <h1 className={styles['page-title']}>
+        <FaLightbulb className={styles['smartifi-icon']} />
+        Smartifi User Management
+      </h1>
+      <div className={styles['search-bar']}>
+        <FaSearch className={styles['search-icon']} />
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+      <div className={styles['user-list']}>
+        {filteredUsers.map(user => (
+          <div className={styles['user-card']} key={user.id}>
+            <div className={styles['user-info']}>
+              <div className={styles['user-avatar']}>
+                <FaUser className={styles['user-icon']} />
+              </div>
+              <div className={styles['user-details']}>
+                <h3>{user.username}</h3>
+                <p>{user.email}</p>
+              </div>
+            </div>
+            <div className={styles['cloud-stats']}>
+              <div className={styles['cloud-usage']}>
+                <FaLightbulb className={styles['upload-icon']} />
+                <div className={styles['usage-bar']}>
+                  <div className={styles['usage-fill']} style={{ width: `${(user.smartifiApps / user.appLimit) * 100}%` }}></div>
+                </div>
+                <span>{user.smartifiApps}/{user.appLimit} </span>
+              </div>
+              <div className={styles['app-limit']}>
+                <FaCloudDownloadAlt className={styles['download-icon']} />
+                <span>App Limit: {user.appLimit}</span>
+                <button className={styles['update-button']} onClick={() => showPopup(user.id)}>
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {popup.visible && (
+        <div className={styles['popup-overlay']}>
+          <div className={styles['popup-content']}>
+            <h2>Update App Limit</h2>
+            <p>Assign new app limit for {users.find(user => user.id === popup.userId)?.username}</p>
+            <input
+              type="number"
+              value={popup.inputValue}
+              onChange={(e) => setPopup({ ...popup, inputValue: parseInt(e.target.value) })}
+              min="1"
+              max="100"
+            />
+            <div className={styles['popup-buttons']}>
+              <button className={styles['confirm-button']} onClick={() => handleUpdateLimit(popup.userId!, popup.inputValue)}>Confirm</button>
+              <button className={styles['cancel-button']} onClick={closePopup}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserLimit;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f7f7f7;
+    color: #333333;
+    line-height: 1.6;
+  }
+  
+  .cloud-user-management {
+    max-width: 75rem;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .page-title {
+    font-size: 2.5rem;
+    color: #b31b1b;
+    text-align: center;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cloud-icon {
+    margin-right: 1rem;
+    color: #ffcc00;
+  }
+  
+  .search-bar {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #b31b1b;
+  }
+  
+  .search-bar input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: none;
+    border-radius: 5rem;
+    background-color: #ffffff;
+    font-size: 1rem;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+  }
+  
+  .user-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+    gap: 2rem;
+  }
+  
+  .user-card {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .user-card:hover {
+    transform: translateY(-0.625rem);
+    box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.1);
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .user-avatar {
+    width: 3.75rem;
+    height: 3.75rem;
+    background-color: #b31b1b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+  
+  .user-icon {
+    font-size: 2rem;
+    color: white;
+  }
+  
+  .user-details h3 {
+    font-size: 1.2rem;
+    color: #b31b1b;
+  }
+  
+  .user-details p {
+    font-size: 0.9rem;
+    color: #333333;
+    opacity: 0.7;
+  }
+  
+  .cloud-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cloud-usage, .app-limit {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .usage-bar {
+    flex-grow: 1;
+    height: 0.625rem;
+    background-color: #e0e0e0;
+    border-radius: 0.313rem;
+    overflow: hidden;
+  }
+  
+  .usage-fill {
+    height: 100%;
+    background-color: #ffcc00;
+    transition: width 0.3s ease;
+  }
+  
+  .upload-icon, .download-icon {
+    color: #b31b1b;
+  }
+  
+  .update-button {
+    padding: 0.313rem 0.625rem;
+    background-color: #b31b1b;
+    color: white;
+    border: none;
+    border-radius: 0.313rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .update-button:hover {
+    background-color: #ffcc00;
+  }
+  
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .popup-content {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 1rem;
+    text-align: center;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.1);
+  }
+  
+  .popup-content h2 {
+    color: #b31b1b;
+    margin-bottom: 1rem;
+  }
+  
+  .popup-content input {
+    width: 100%;
+    padding: 0.313rem;
+    margin: 1rem 0;
+    border: 0.063rem solid #b31b1b;
+    border-radius: 0.313rem;
+  }
+  
+  .popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+  
+  .confirm-button, .cancel-button {
+    padding: 0.313rem 0.625rem;
+    border: none;
+    border-radius: 0.313rem;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  
+  .confirm-button {
+    background-color: #b31b1b;
+    color: white;
+  }
+  
+  .cancel-button {
+    background-color: #e0e0e0;
+    color: #333333;
+  }
+  
+  .confirm-button:hover, .cancel-button:hover {
+    opacity: 0.9;
+  }
+  
+  @media screen and (max-width: 48rem) {
+    .cloud-user-management {
+      padding: 1rem;
+    }
+  
+    .page-title {
+      font-size: 2rem;
+    }
+  
+    .user-list {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media screen and (max-width: 30rem) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+  
+    .user-card {
+      padding: 1rem;
+    }
+  
+    .user-avatar {
+      width: 3.125rem;
+      height: 3.125rem;
+    }
+  
+    .user-icon {
+      font-size: 1.2rem;
+    }
+  
+    .user-details h3 {
+      font-size: 1.5rem;
+    }
+  
+    .user-details p {
+      font-size: 0.9rem;
+    }
+  
+    .update-button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+  
