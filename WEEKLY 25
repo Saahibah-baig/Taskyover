@@ -1,0 +1,381 @@
+import React, { useState, useEffect } from 'react';
+import { FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
+import './Weekly.css';
+
+interface Action {
+  id: string;
+  time: string;
+  action: string;
+}
+
+function Weekly() {
+  const [days, setDays] = useState<{
+    [key: string]: Action[];
+  }>({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  });
+
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [setAsText, setSetAsText] = useState<string>('');
+  const [weekStartDate, setWeekStartDate] = useState<string>('');
+  const [weekEndDate, setWeekEndDate] = useState<string>('');
+
+  const [timeInputs, setTimeInputs] = useState<{
+    [key: string]: string;
+  }>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+
+  const [actionInputs, setActionInputs] = useState<{
+    [key: string]: string;
+  }>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+
+  useEffect(() => {
+    generateWeekSchedule();
+  }, []);
+
+  const getNextMonday = () => {
+    let today = new Date();
+    let dayOfWeek = today.getDay();
+
+    let daysUntilNextMonday = dayOfWeek === 1 ? 7 : 1 - dayOfWeek;
+    let nextMonday = new Date(today.setDate(today.getDate() + daysUntilNextMonday));
+
+    return nextMonday;
+  };
+
+  const generateWeekSchedule = () => {
+    let nextMonday = getNextMonday();
+    let weekStart = new Date(nextMonday);
+    let weekEnd = new Date(nextMonday.setDate(nextMonday.getDate() + 6));
+    setWeekStartDate(formatDate(weekStart));
+    setWeekEndDate(formatDate(weekEnd));
+
+    let weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let initialDays: { [key: string]: Action[] } = {};
+
+    weekDays.forEach((day) => {
+      initialDays[day] = [];
+    });
+
+    setDays(initialDays);
+  };
+
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const addAction = (day: string) => {
+    if (timeInputs[day] && actionInputs[day]) {
+      setDays((prevDays) => ({
+        ...prevDays,
+        [day]: [
+          ...prevDays[day],
+          { id: Math.random().toString(36).substr(2, 9), time: timeInputs[day], action: actionInputs[day] },
+        ],
+      }));
+      setTimeInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+      setActionInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+    } else {
+      alert('Please fill in both time and action.');
+    }
+  };
+
+  const removeAction = (day: string, id: string) => {
+    setDays((prevDays) => ({
+      ...prevDays,
+      [day]: prevDays[day].filter((action) => action.id !== id),
+    }));
+  };
+
+  const setAsDay = (fromDay: string, toDay: string) => {
+    setDays((prevDays) => ({
+      ...prevDays,
+      [toDay]: [...prevDays[fromDay]],
+    }));
+  };
+
+  const handleCopyClick = (day: string) => {
+    if (selectedDay) {
+      setAsDay(selectedDay, day);
+    } else {
+      alert('Please select a day to copy from.');
+    }
+  };
+
+  return (
+    <div className="weekTop">
+      <div className="weekDateHeader">
+        <h2>{`${weekStartDate} to ${weekEndDate}`}</h2>
+      </div>
+      <div className="weekApp">
+        {Object.keys(days).map((day) => (
+          <div key={day} className="weekDaySchedule">
+            <h2>{day}</h2>
+            <hr />
+            <div className="weekActionInputs">
+              <div className="weekInputGroup">
+                <input
+                  type="time"
+                  className="weekTime"
+                  value={timeInputs[day]}
+                  onChange={(e) => setTimeInputs((prevInputs) => ({ ...prevInputs, [day]: e.target.value }))}
+                />
+                <select
+                  value={actionInputs[day]}
+                  className="weekAction"
+                  onChange={(e) => setActionInputs((prevInputs) => ({ ...prevInputs, [day]: e.target.value }))}
+                >
+                  <option value="">Select Action</option>
+                  <option value="Scale Up">Scale Up</option>
+                  <option value="Scale Down">Scale Down</option>
+                  <option value="Terminate">Terminate</option>
+                  <option value="Restart">Restart</option>
+                </select>
+              </div>
+              <FaPlusCircle className="weekFaPlus" onClick={() => addAction(day)} />
+            </div>
+            <div className="weekCopyControls">
+              <select
+                onChange={(e) => {
+                  setSelectedDay(e.target.value);
+                  setSetAsText(`Set as ${e.target.value}`);
+                }}
+              >
+                <option value="">Select Day</option>
+                {Object.keys(days).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <button onClick={() => handleCopyClick(day)}>Copy</button>
+            </div>
+            <hr />
+            {days[day].map((action) => (
+              <div key={action.id} className="weekActionItem">
+                <span>{action.time}</span>
+                <span>{action.action}</span>
+                <FaMinusCircle className="weekMinus" onClick={() => removeAction(day, action.id)} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default Weekly;
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f9;
+  }
+  
+  .weekApp {
+    padding: 1rem;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .weekTop {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .weekDateHeader {
+    text-align: center;
+    margin-top: 1rem;
+    color: #fff;
+  }
+  
+  .weekDaySchedule {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-right: 1rem;
+    box-sizing: border-box;
+    width: 12rem;
+    align-self: flex-start;
+  }
+  
+  .weekDaySchedule h2 {
+    font-size: 1rem;
+    color: #b31b1b;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  
+  .weekDaySchedule hr {
+    border: 0;
+    height: 0.05rem;
+    background: #ddd;
+    margin: 0.5rem 0;
+  }
+  
+  .weekActionItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffc40d;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.5rem;
+  }
+  
+  .weekActionItem span {
+    color: #333;
+    margin-right: 0.5rem;
+  }
+  
+  .weekActionItem .weekMinus {
+    font-size: 1rem;
+    color: red;
+    cursor: pointer;
+  }
+  
+  .weekActionInputs {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    justify-content: space-between;
+  }
+  
+  .weekInputGroup {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .weekInputGroup input[type="time"],
+  .weekInputGroup select {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 0.05rem solid #ccc;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+    width: 7rem;
+    font-size: 0.8rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .weekInputGroup input[type="time"]:focus,
+  .weekInputGroup select:focus {
+    border-color: #b31b1b;
+    outline: none;
+  }
+  
+  .weekCopyControls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .weekCopyControls select {
+    padding: 0.3rem;
+    border: 0.05rem solid #ccc;
+    border-radius: 0.5rem;
+    margin-right: 0.5rem;
+    font-size: 0.8rem;
+    flex: 1;
+    background-color: #fff;
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease;
+  }
+  
+  .weekCopyControls select:focus {
+    border-color: #b31b1b;
+    outline: none;
+  }
+  
+  .weekCopyControls button {
+    background-color: #b31b1b;
+    color: white;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+  }
+  
+  .weekCopyControls button:hover {
+    background-color: #c91313;
+  }
+  
+  .weekMinus {
+    cursor: pointer;
+    font-size: 1.5rem;
+    margin-right: 0;
+  }
+  
+  .weekFaPlus {
+    color: #b31b1b;
+    font-size: 1.5rem;
+  }
+  
+  /* Media Query for Responsive Design */
+  @media (max-width: 768px) {
+    .weekApp {
+      flex-direction: column;
+      padding: 0.5rem;
+    }
+  
+    .weekDaySchedule {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+  
+    .weekActionInputs,
+    .weekCopyControls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .weekActionInputs input,
+    .weekActionInputs select,
+    .weekCopyControls select,
+    .weekCopyControls button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  
+    .weekCopyControls button {
+      margin-bottom: 0;
+    }
+  }
+  
