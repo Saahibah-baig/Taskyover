@@ -1,0 +1,377 @@
+import React, { useState } from 'react';
+import { FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
+import './MonthUtils.css'; // Import regular CSS file with class names
+
+interface Props {
+  weekIndex: number;
+  weekData: {
+    Monday: { id: string; time: string; action: string }[];
+    Tuesday: { id: string; time: string; action: string }[];
+    Wednesday: { id: string; time: string; action: string }[];
+    Thursday: { id: string; time: string; action: string }[];
+    Friday: { id: string; time: string; action: string }[];
+    Saturday: { id: string; time: string; action: string }[];
+    Sunday: { id: string; time: string; action: string }[];
+  };
+  setWeeksData: React.Dispatch<
+    React.SetStateAction<{
+      Monday: { id: string; time: string; action: string }[];
+      Tuesday: { id: string; time: string; action: string }[];
+      Wednesday: { id: string; time: string; action: string }[];
+      Thursday: { id: string; time: string; action: string }[];
+      Friday: { id: string; time: string; action: string }[];
+      Saturday: { id: string; time: string; action: string }[];
+      Sunday: { id: string; time: string; action: string }[];
+    }[]>
+  >;
+}
+
+interface TimeInputs {
+  Monday: string;
+  Tuesday: string;
+  Wednesday: string;
+  Thursday: string;
+  Friday: string;
+  Saturday: string;
+  Sunday: string;
+}
+
+interface ActionInputs {
+  Monday: string;
+  Tuesday: string;
+  Wednesday: string;
+  Thursday: string;
+  Friday: string;
+  Saturday: string;
+  Sunday: string;
+}
+
+const Monthutils: React.FC<Props> = ({ weekIndex, weekData, setWeeksData }) => {
+  const [days, setDays] = useState(weekData);
+  const [selectedDay, setSelectedDay] = useState<keyof TimeInputs | null>(null);
+  const [timeInputs, setTimeInputs] = useState<TimeInputs>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+  const [actionInputs, setActionInputs] = useState<ActionInputs>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+
+  const addAction = (day: keyof TimeInputs) => {
+    if (timeInputs[day] && actionInputs[day]) {
+      const updatedDays = {
+        ...days,
+        [day]: [
+          ...(days[day] || []),
+          { id: Math.random().toString(36).substr(2, 9), time: timeInputs[day], action: actionInputs[day] },
+        ],
+      };
+      setDays(updatedDays);
+      setWeeksData((prevWeeks) => {
+        const newWeeksData = [...prevWeeks];
+        newWeeksData[weekIndex] = updatedDays;
+        return newWeeksData;
+      });
+      setTimeInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+      setActionInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+    } else {
+      alert('Please fill in both time and action.');
+    }
+  };
+
+  const removeAction = (day: keyof TimeInputs, id: string) => {
+    const updatedDays = {
+      ...days,
+      [day]: (days[day] || []).filter((action) => action.id !== id),
+    };
+    setDays(updatedDays);
+    setWeeksData((prevWeeks) => {
+      const newWeeksData = [...prevWeeks];
+      newWeeksData[weekIndex] = updatedDays;
+      return newWeeksData;
+    });
+  };
+
+  const setAsDay = (fromDay: keyof TimeInputs, toDay: keyof TimeInputs) => {
+    const updatedDays = {
+      ...days,
+      [toDay]: [...(days[fromDay] || [])],
+    };
+    setDays(updatedDays);
+    setWeeksData((prevWeeks) => {
+      const newWeeksData = [...prevWeeks];
+      newWeeksData[weekIndex] = updatedDays;
+      return newWeeksData;
+    });
+  };
+
+  const handleCopyClick = (day: keyof TimeInputs) => {
+    if (selectedDay) {
+      setAsDay(selectedDay, day);
+    } else {
+      alert('Please select a day to copy from.');
+    }
+  };
+
+  return (
+    <div className="mutil-app">
+      {Object.keys(days).map((day) => (
+        <div key={day} className="mutil-day-schedule">
+          <h2>{day}</h2>
+          <hr className="mutil-hr" />
+          <div className="mutil-action-inputs">
+            <div className="mutil-input-group">
+              <input
+                type="time"
+                className="mutil-time"
+                value={timeInputs[day as keyof TimeInputs]}
+                onChange={(e) => setTimeInputs((prevInputs) => ({ ...prevInputs, [day as keyof TimeInputs]: e.target.value }))}
+              />
+              <select
+                value={actionInputs[day as keyof ActionInputs]}
+                className="mutil-action"
+                onChange={(e) => setActionInputs((prevInputs) => ({ ...prevInputs, [day as keyof ActionInputs]: e.target.value }))}
+              >
+                <option value="">Select Action</option>
+                <option value="Scale Up">Scale Up</option>
+                <option value="Scale Down">Scale Down</option>
+                <option value="Terminate">Terminate</option>
+                <option value="Restart">Restart</option>
+              </select>
+            </div>
+            <FaPlusCircle className="mutil-fa-plus" onClick={() => addAction(day as keyof TimeInputs)} />
+          </div>
+          <div className="mutil-copy-controls">
+            <select
+              onChange={(e) => {
+                setSelectedDay(e.target.value as keyof TimeInputs);
+              }}
+            >
+              <option value="">Select Day</option>
+              {Object.keys(days).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+            <button onClick={() => handleCopyClick(day as keyof TimeInputs)}>Copy</button>
+          </div>
+          <hr className="mutil-hr" />
+          {days[day as keyof TimeInputs].map((action) => (
+            <div key={action.id} className="mutil-action-item">
+              <span>{action.time}</span>
+              <span>{action.action}</span>
+              <FaMinusCircle className="mutil-minus" onClick={() => removeAction(day as keyof TimeInputs, action.id)} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Monthutils;
+/* MonthUtils.css */
+
+/* Global Reset */
+*,
+.mutil-body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.mutil-body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7f9;
+}
+
+.mutil-app {
+  padding: 1rem;
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dateHeader {
+  text-align: center;
+  margin-top: 1rem;
+  color: #fff;
+}
+
+.mutil-day-schedule {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-right: 1rem;
+  box-sizing: border-box;
+  width: 12rem;
+  align-self: flex-start;
+}
+
+.mutil-day-schedule h2 {
+  font-size: 1rem;
+  color: #b31b1b;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.mutil-hr {
+  border: 0;
+  height: 0.05rem;
+  background: #ddd;
+  margin: 0.5rem 0;
+}
+
+.mutil-action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffc40d;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.mutil-action-item span {
+  color: #333;
+  margin-right: 0.5rem;
+}
+
+.mutil-minus {
+  font-size: 1rem;
+  color: red;
+  cursor: pointer;
+}
+
+.mutil-action-inputs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  justify-content: space-between;
+}
+
+.mutil-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.mutil-input-group input[type="time"],
+.mutil-input-group select {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 0.05rem solid #ccc;
+  border-radius: 0.5rem;
+  background-color: #fff;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+  width: 7rem;
+  font-size: 0.8rem;
+  transition: border-color 0.3s ease;
+}
+
+.mutil-input-group input[type="time"]:focus,
+.mutil-input-group select:focus {
+  border-color: #b31b1b;
+  outline: none;
+}
+
+.mutil-copy-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.mutil-copy-controls select {
+  padding: 0.3rem;
+  border: 0.05rem solid #ccc;
+  border-radius: 0.5rem;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+  flex: 1;
+  background-color: #fff;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease;
+}
+
+.mutil-copy-controls select:focus {
+  border-color: #b31b1b;
+  outline: none;
+}
+
+.mutil-copy-controls button {
+  background-color: #b31b1b;
+  color: white;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.mutil-copy-controls button:hover {
+  background-color: #c91313;
+}
+
+.mutil-minus {
+  cursor: pointer;
+  font-size: 1.5rem;
+  margin-right: 0;
+}
+
+.mutil-fa-plus {
+  color: #b31b1b;
+  font-size: 1.5rem;
+}
+
+/* Media Query for Responsive Design */
+@media (max-width: 768px) {
+  .mutil-app {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+
+  .mutil-day-schedule {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .mutil-action-inputs,
+  .mutil-copy-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mutil-action-inputs input,
+  .mutil-action-inputs select,
+  .mutil-copy-controls select,
+  .mutil-copy-controls button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .mutil-copy-controls button {
+    margin-bottom: 0;
+  }
+}
