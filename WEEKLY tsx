@@ -1,0 +1,191 @@
+import React, { useState, useEffect } from 'react';
+import { FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
+import styles from './Weekly.module.css'; 
+
+interface Action {
+  id: string;
+  time: string;
+  action: string;
+}
+
+function Weekly() {
+  const [days, setDays] = useState<{
+    [key: string]: Action[];
+  }>({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  });
+
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [setAsText, setSetAsText] = useState<string>('');
+  const [weekStartDate, setWeekStartDate] = useState<string>('');
+  const [weekEndDate, setWeekEndDate] = useState<string>('');
+
+  const [timeInputs, setTimeInputs] = useState<{
+    [key: string]: string;
+  }>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+
+  const [actionInputs, setActionInputs] = useState<{
+    [key: string]: string;
+  }>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: '',
+    Sunday: '',
+  });
+
+  useEffect(() => {
+    generateWeekSchedule();
+  }, []); 
+
+  const getNextMonday = () => {
+    let today = new Date();
+    let dayOfWeek = today.getDay(); 
+
+    let daysUntilNextMonday = dayOfWeek === 1 ? 7 : 1 - dayOfWeek;
+    let nextMonday = new Date(today.setDate(today.getDate() + daysUntilNextMonday));
+
+    return nextMonday;
+  };
+
+  const generateWeekSchedule = () => {
+    let nextMonday = getNextMonday();
+    let weekStart = new Date(nextMonday); 
+    let weekEnd = new Date(nextMonday.setDate(nextMonday.getDate() + 6));
+    setWeekStartDate(formatDate(weekStart));
+    setWeekEndDate(formatDate(weekEnd));
+
+    let weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let initialDays: { [key: string]: Action[] } = {};
+
+    weekDays.forEach((day) => {
+      initialDays[day] = [];
+    });
+
+    setDays(initialDays);
+  };
+
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+  
+
+  const addAction = (day: string) => {
+    if (timeInputs[day] && actionInputs[day]) {
+      setDays((prevDays) => ({
+        ...prevDays,
+        [day]: [
+          ...prevDays[day],
+          { id: Math.random().toString(36).substr(2, 9), time: timeInputs[day], action: actionInputs[day] },
+        ],
+      }));
+      setTimeInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+      setActionInputs((prevInputs) => ({ ...prevInputs, [day]: '' }));
+    } else {
+      alert('Please fill in both time and action.');
+    }
+  };
+
+  const removeAction = (day: string, id: string) => {
+    setDays((prevDays) => ({
+      ...prevDays,
+      [day]: prevDays[day].filter((action) => action.id !== id),
+    }));
+  };
+
+  const setAsDay = (fromDay: string, toDay: string) => {
+    setDays((prevDays) => ({
+      ...prevDays,
+      [toDay]: [...prevDays[fromDay]],
+    }));
+  };
+
+  const handleCopyClick = (day: string) => {
+    if (selectedDay) {
+      setAsDay(selectedDay, day);
+    } else {
+      alert('Please select a day to copy from.');
+    }
+  };
+
+  return (
+    <div className={styles.top}>
+      <div className={styles.dateHeader}>
+        <h2>{`${weekStartDate} to ${weekEndDate}`}</h2>
+      </div>
+      <div className={styles.app}>
+        {Object.keys(days).map((day) => (
+          <div key={day} className={styles.daySchedule}>
+            <h2>{day}</h2>
+            <hr />
+            <div className={styles.actionInputs}>
+              <div className={styles.inputGroup}>
+                <input
+                  type="time"
+                  className={styles.time}
+                  value={timeInputs[day]}
+                  onChange={(e) => setTimeInputs((prevInputs) => ({ ...prevInputs, [day]: e.target.value }))}
+                />
+                <select
+                  value={actionInputs[day]}
+                  className={styles.action}
+                  onChange={(e) => setActionInputs((prevInputs) => ({ ...prevInputs, [day]: e.target.value }))}
+                >
+                  <option value="">Select Action</option>
+                  <option value="Scale Up">Scale Up</option>
+                  <option value="Scale Down">Scale Down</option>
+                  <option value="Terminate">Terminate</option>
+                  <option value="Restart">Restart</option>
+                </select>
+              </div>
+              <FaPlusCircle className={styles.FaPlus} onClick={() => addAction(day)} />
+            </div>
+            <div className={styles.copyControls}>
+              <select
+                onChange={(e) => {
+                  setSelectedDay(e.target.value);
+                  setSetAsText(`Set as ${e.target.value}`);
+                }}
+              >
+                <option value="">Select Day</option>
+                {Object.keys(days).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <button onClick={() => handleCopyClick(day)}>Copy</button>
+            </div>
+            <hr />
+            {days[day].map((action) => (
+              <div key={action.id} className={styles.actionItem}>
+                <span>{action.time}</span>
+                <span>{action.action}</span>
+                <FaMinusCircle className={styles.minus} onClick={() => removeAction(day, action.id)} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default Weekly;
