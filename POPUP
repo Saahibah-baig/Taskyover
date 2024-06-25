@@ -1,0 +1,191 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import InvalidLoginPopup from './InvalidLoginPopup';
+import { FaLock, FaShieldAlt } from 'react-icons/fa';
+
+const PageContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f4f4f4;
+`;
+
+const AuthCard = styled.div`
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  width: 400px;
+  position: relative;
+  overflow: hidden;
+`;
+
+const SecurityBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #d71e28;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+`;
+
+const Logo = styled.img`
+  width: 200px;
+  margin: 0 auto 1.5rem;
+  display: block;
+`;
+
+const WellsFargoHeading = styled.h2`
+  font-family: 'Verdana', sans-serif;
+  color: #D71E28;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const Title = styled.h2`
+  color: #d71e28;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.8rem;
+`;
+
+interface TimerProps {
+  isLow: boolean;
+}
+
+const Timer = styled.div<TimerProps>`
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: ${props => props.isLow ? '#d71e28' : '#000000'};
+  text-align: center;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+
+  &:focus {
+    outline: none;
+    border-color: #d71e28;
+    box-shadow: 0 0 0 2px rgba(215, 30, 40, 0.1);
+  }
+`;
+
+const Button = styled.button`
+  background-color: #d71e28;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #b01820;
+  }
+`;
+
+const SecureNote = styled.p`
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+`;
+
+const MultifactorAuth: React.FC = () => {
+  const [otp, setOtp] = useState('');
+  const [timeLeft, setTimeLeft] = useState(60); 
+  const [showInvalidPopup, setShowInvalidPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else {
+      setPopupMessage('The OTP has expired. Please enter the new OTP sent to your registered email ID.');
+      setShowInvalidPopup(true);
+    }
+  }, [timeLeft]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    if (otp === '123456') { 
+      navigate('/landing');
+    } else {
+      setPopupMessage('Invalid OTP. Please try again.');
+      setShowInvalidPopup(true);
+    }
+  };
+
+  const resendOtp = () => {
+    setTimeLeft(300);
+    setShowInvalidPopup(false);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <PageContainer>
+      <AuthCard>
+        <SecurityBadge>
+          <FaShieldAlt /> Secure
+        </SecurityBadge>
+        <WellsFargoHeading>Wells Fargo</WellsFargoHeading>
+        <Logo />
+        <Title>Security Verification</Title>
+        <Timer isLow={timeLeft < 60}>{formatTime(timeLeft)}</Timer>
+        <form onSubmit={handleSubmit}>
+          <Input
+            type="text"
+            placeholder="Enter 6-digit OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            maxLength={6}
+          />
+          <Button type="submit">Verify OTP</Button>
+        </form>
+        <SecureNote>
+          <FaLock /> Your security is our top priority
+        </SecureNote>
+      </AuthCard>
+      {showInvalidPopup && (
+        <InvalidLoginPopup
+          message={popupMessage}
+          onClose={() => {
+            setShowInvalidPopup(false);
+            if (timeLeft === 0) resendOtp();
+          }}
+        />
+      )}
+    </PageContainer>
+  );
+};
+
+export default MultifactorAuth;
