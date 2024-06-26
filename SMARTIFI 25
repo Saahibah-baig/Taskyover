@@ -1,0 +1,318 @@
+import React, { useState } from 'react';
+import Modal from 'react-modal';
+import { FaCloud, FaBolt, FaCog, FaChartLine, FaDollarSign, FaServer } from 'react-icons/fa';
+import './Smartifi.css'; 
+
+function Smartifi() {
+  const [smartifiActive, setSmartifiActive] = useState(false);
+  const [showSmartifiPopup, setShowSmartifiPopup] = useState(false);
+
+  const handleSmartifiToggle = () => {
+    setSmartifiActive(!smartifiActive); 
+    setShowSmartifiPopup(true);
+  };
+
+  return (
+    <div className={`smart-container ${smartifiActive ? 'smart-active' : ''}`}>
+      <div className="smart-header">
+        <h2>Smartifi Cloud Optimizer</h2>
+        <button 
+          className={`smart-toggle-button ${smartifiActive ? 'smart-on' : 'smart-off'}`} 
+          onClick={handleSmartifiToggle}
+        >
+          <FaBolt />
+          <span>{smartifiActive ? 'Activated' : 'Deactivated'}</span>
+        </button>
+      </div>
+
+      <div className="smart-visualization">
+        <div className="smart-cloud-icon">
+          <FaCloud />
+        </div>
+        <div className={`smart-optimization-ring ${smartifiActive ? 'smart-active' : ''}`}>
+          <FaDollarSign className="smart-cog-icon" />
+          <FaChartLine className="smart-chart-icon" />
+        </div>
+      </div>
+
+      <div className="smart-metrics">
+        <div className="smart-metric-tile">
+          <FaDollarSign className="smart-metric-icon" />
+          <h3>Cost Savings</h3>
+          <p className="smart-metric-value">{smartifiActive ? '23%' : '0%'}</p>
+        </div>
+        <div className="smart-metric-tile">
+          <FaBolt className="smart-metric-icon" />
+          <h3>Performance Boost</h3>
+          <p className="smart-metric-value">{smartifiActive ? '+31%' : '0%'}</p>
+        </div>
+        <div className="smart-metric-tile">
+          <FaServer className="smart-metric-icon" />
+          <h3>Resource Utilization</h3>
+          <p className="smart-metric-value">{smartifiActive ? '92%' : '67%'}</p>
+        </div>
+      </div>
+
+      <div className="smart-features">
+        <div className="smart-feature">
+          <h3>Real-time Analysis</h3>
+          <p>Continuous monitoring and adjustment of cloud resources</p>
+        </div>
+        <div className="smart-feature">
+          <h3>Cost Reduction</h3>
+          <p>Intelligent allocation to minimize unnecessary expenses</p>
+        </div>
+        <div className="smart-feature">
+          <h3>Performance Optimization</h3>
+          <p>Balancing resources for optimal application performance</p>
+        </div>
+      </div>
+
+      <Modal
+        isOpen={showSmartifiPopup}
+        onRequestClose={() => setShowSmartifiPopup(false)}
+        className="smart-modal"
+        overlayClassName="smart-modal-overlay"
+      >
+        <h2>Smartifi Cloud Optimizer {smartifiActive ? 'Activated' : 'Deactivated'}</h2>
+        <p>
+          Cloud cost optimization has been {smartifiActive ? 'activated' : 'deactivated'} for your infrastructure.
+        </p>
+        <button onClick={() => setShowSmartifiPopup(false)}>Close</button>
+      </Modal>
+    </div>
+  );
+}
+
+export default Smartifi;
+.smart-container {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: #fff7e1;
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+}
+
+.smart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.875rem;
+}
+
+.smart-header h2 {
+  font-size: 1.75rem;
+  color: #b34200;
+}
+
+.smart-toggle-button {
+  display: flex;
+  align-items: center;
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.smart-toggle-button.smart-off {
+  background-color: #8b0000;
+  color: white;
+}
+
+.smart-toggle-button.smart-on {
+  background-color: #fbc02d;
+  color: #8b0000;
+}
+
+.smart-toggle-button svg {
+  margin-right: 0.625rem;
+}
+
+.smart-visualization {
+  position: relative;
+  width: 12.5rem;
+  height: 12.5rem;
+  margin: 0 auto 2.5rem;
+}
+
+.smart-cloud-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6.25rem;
+  color: #ffab00;
+}
+
+.smart-optimization-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0.25rem solid #ffab00;
+  border-radius: 50%;
+  animation: smart-pulse 2s infinite;
+}
+
+.smart-optimization-ring.smart-active {
+  animation: smart-rotate 10s linear infinite;
+}
+
+.smart-cog-icon,
+.smart-chart-icon {
+  position: absolute;
+  font-size: 1.875rem;
+  color: #b34200;
+}
+
+.smart-cog-icon {
+  top: 0.625rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.smart-chart-icon {
+  bottom: 0.625rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@keyframes smart-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes smart-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.smart-metrics,
+.smart-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.625rem;
+  margin-bottom: 2.5rem;
+}
+
+.smart-metric-tile,
+.smart-feature {
+  flex: 0 1 calc(33.333% - 0.625rem);
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 0.625rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.625rem;
+  box-sizing: border-box;
+}
+
+.smart-metric-tile:hover {
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+.smart-metric-icon {
+  font-size: 2.25rem;
+  color: #ffab00;
+  margin-bottom: 0.625rem;
+}
+
+.smart-metric-tile h3,
+.smart-feature h3 {
+  font-size: 1.125rem;
+  color: #b34200;
+  margin-bottom: 0.625rem;
+}
+
+.smart-metric-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #8b0000;
+}
+
+.smart-feature p {
+  font-size: 0.875rem;
+  color: #7f8c8d;
+}
+
+.smart-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  padding: 1.875rem;
+  border-radius: 0.625rem;
+  max-width: 25rem;
+  width: 100%;
+  outline: none;
+}
+
+.smart-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.smart-modal h2 {
+  font-size: 1.5rem;
+  color: #b34200;
+  margin-bottom: 1.25rem;
+}
+
+.smart-modal p {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 1.25rem;
+}
+
+.smart-modal button {
+  padding: 0.625rem 1.25rem;
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  border-radius: 0.3125rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.smart-modal button:hover {
+  background-color: #6a1b19;
+}
+
+@media (max-width: 48rem) {
+  .smart-metric-tile,
+  .smart-feature {
+    flex: 0 1 calc(50% - 0.3125rem);
+  }
+}
+
+@media (max-width: 30rem) {
+  .smart-metric-tile,
+  .smart-feature {
+    flex: 0 1 100%;
+  }
+}
