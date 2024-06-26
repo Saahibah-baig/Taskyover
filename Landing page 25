@@ -1,0 +1,273 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { MdDelete, MdAppRegistration, MdAccountBox } from 'react-icons/md';
+import { RxUpdate } from 'react-icons/rx';
+import { FaUserEdit, FaCogs, FaChartLine } from 'react-icons/fa';
+import './Landingpage.css';
+
+const roles = {
+  admin: 'admin',
+  developer: 'developer',
+  executive: 'executive',
+};
+
+interface Button {
+  label: string;
+  icon: JSX.Element;
+  route: string;
+}
+
+const actionButtons: Record<string, Button[]> = {
+  admin: [
+    { label: 'Update Application Limit', icon: <RxUpdate />, route: '/update-app-limit' },
+    { label: 'Update User Limit', icon: <FaUserEdit />, route: '/update-user-limit' },
+    { label: 'Update Instance Type', icon: <FaCogs />, route: '/update-instance-type' },
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+    { label: 'Manage User Accounts', icon: <MdAccountBox />, route: '/manage-user-accounts' },
+  ],
+  developer: [
+    { label: 'Create New App', icon: <MdAppRegistration />, route: '/create-app' },
+    { label: 'Delete App', icon: <MdDelete />, route: '/delete-app' },
+    { label: 'Request Threshold Change', icon: <FaUserEdit />, route: '/request-threshold-change' },
+    { label: 'Change Policy per App', icon: <FaCogs />, route: '/change-policy-app' },
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+  ],
+  executive: [
+    { label: 'App Overview', icon: <FaChartLine />, route: '/app-overview' },
+  ],
+};
+
+interface CarouselItem {
+  title: string;
+  image: string;
+  link: string;
+}
+
+const Landingpage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const role: string = (location.state as any)?.role || 'admin'; 
+
+  const [newsIndex, setNewsIndex] = useState(0);
+  const [updateIndex, setUpdateIndex] = useState(0);
+
+  const newsItems: CarouselItem[] = [
+    { title: "New cloud service launched", image: "/path/to/news1.jpg", link: "https://example.com/news1" },
+    { title: "Updates to cloud security protocols", image: "/path/to/news2.jpg", link: "https://example.com/news2" },
+    { title: "Cloud cost optimization strategies", image: "/path/to/news3.jpg", link: "https://example.com/news3" },
+    { title: "Upcoming cloud technology trends", image: "/path/to/news4.jpg", link: "https://example.com/news4" }
+  ];
+
+  const updateItems: CarouselItem[] = [
+    { title: "New feature: Cost analysis tool", image: "/path/to/update1.jpg", link: "https://example.com/update1" },
+    { title: "UI improvements for dashboard", image: "/path/to/update2.jpg", link: "https://example.com/update2" },
+    { title: "Bug fixes in reporting module", image: "/path/to/update3.jpg", link: "https://example.com/update3" },
+    { title: "Performance enhancements", image: "/path/to/update4.jpg", link: "https://example.com/update4" }
+  ];
+
+  useEffect(() => {
+    const newsInterval = setInterval(() => {
+      setNewsIndex((prevIndex) => (prevIndex + 1) % newsItems.length);
+    }, 5000);
+
+    const updateInterval = setInterval(() => {
+      setUpdateIndex((prevIndex) => (prevIndex + 1) % updateItems.length);
+    }, 5000);
+
+    return () => {
+      clearInterval(newsInterval);
+      clearInterval(updateInterval);
+    };
+  }, []);
+
+  const renderButtons = () => {
+    return actionButtons[role].map((button: Button, index: number) => (
+      <div key={index} className="appover-dashboardTile" onClick={() => navigate(button.route)}>
+        <div className="appover-tileIcon">{button.icon}</div>
+        <div className="appover-tileLabel">{button.label}</div>
+      </div>
+    ));
+  };
+
+  const renderCarouselItem = (item: CarouselItem) => (
+    <a href={item.link} target="_blank" rel="noopener noreferrer" className="appover-carouselItem">
+      <img src={item.image} alt={item.title} className="appover-carouselImage" />
+      <div className="appover-carouselTitle">{item.title}</div>
+    </a>
+  );
+
+  return (
+    <div className="appover-dashboardContainer">
+      <div className="appover-dashboardHeader">
+        <h1>Cloud Cost Optimization Center</h1>
+        <p>{role.charAt(0).toUpperCase() + role.slice(1)} Dashboard</p>
+      </div>
+      <div className="appover-dashboardGrid">
+        {renderButtons()}
+      </div>
+      <div className="appover-carouselContainer">
+        <div className="appover-carousel">
+          <h3>Latest Cloud News</h3>
+          {renderCarouselItem(newsItems[newsIndex])}
+        </div>
+        <div className="appover-carousel">
+          <h3>Website Updates</h3>
+          {renderCarouselItem(updateItems[updateIndex])}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Landingpage;
+/* Landingpage.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+.appover-body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  color: #333333;
+}
+
+.appover-dashboardContainer {
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.appover-dashboardHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.appover-dashboardHeader h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #D71E28;
+}
+
+.appover-dashboardHeader p {
+  font-size: 1.2rem;
+  color: #666666;
+}
+
+.appover-dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.appover-dashboardTile {
+  background: #ffffff;
+  border: 2px solid #f1f1f1;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  height: 200px;
+}
+
+.appover-dashboardTile:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 24px rgba(215, 30, 40, 0.15);
+  border-color: #D71E28;
+}
+
+.appover-tileIcon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  color: #D71E28;
+  transition: all 0.3s ease;
+}
+
+.appover-tileLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  color: #333333;
+}
+
+.appover-carouselContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.appover-carousel {
+  width: 48%;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.appover-carousel h3 {
+  margin-bottom: 1rem;
+  color: #D71E28;
+}
+
+.appover-carouselItem {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.appover-carouselImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.appover-carouselTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .appover-dashboardGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .appover-carouselContainer {
+    flex-direction: column;
+  }
+  
+  .appover-carousel {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+
+@keyframes appover-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.appover-dashboardTile:hover .appover-tileIcon {
+  animation: appover-pulse 1s infinite;
+  color: #FFCD11;
+}
