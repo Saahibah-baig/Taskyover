@@ -1,0 +1,447 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './Newapp.css';
+import InvalidLoginPopup from './InvalidLoginPopup';
+import { FaCloud, FaGit, FaServer, FaCog, FaCalendarAlt, FaUniversity  } from 'react-icons/fa';
+
+interface FormData {
+  policyType: string;
+  currentInstance: string;
+  allowedInstances: string[];
+  gitRepo: string;
+  terminationUponNoUse: boolean;
+}
+
+interface SuccessPopupProps {
+  onClose: () => void;
+  onHome: () => void;
+  onApplyPolicy: () => void;
+}
+
+const SuccessPopup: React.FC<SuccessPopupProps> = ({ onClose, onHome, onApplyPolicy }) => {
+  return (
+    <div className="create-popup-overlay">
+      <div className="create-popup-content create-success-popup">
+        <h2><FaUniversity  className="create-icon" /> App Created Successfully</h2>
+        <div className="create-popup-buttons">
+          <button onClick={onHome} className="create-btn create-btn-home">Home</button>
+          <button onClick={onApplyPolicy} className="create-btn create-btn-apply">Apply Policy</button>
+        </div>
+        <button onClick={onClose} className="create-btn create-btn-close">Close</button>
+      </div>
+    </div>
+  );
+};
+
+const Newapp: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    policyType: 'daily',
+    currentInstance: '',
+    allowedInstances: [],
+    gitRepo: '',
+    terminationUponNoUse: true,
+  });
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [availableInstances, setAvailableInstances] = useState(['t2micro', 't3micro', 't4micro']);
+  const [appId, setAppId] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setAvailableInstances(['t2micro', 't3micro', 't4micro'].filter(
+      instance => instance !== formData.currentInstance && !formData.allowedInstances.includes(instance)
+    ));
+  }, [formData.currentInstance, formData.allowedInstances]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAllowedInstanceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedInstance = e.target.value;
+    if (selectedInstance && !formData.allowedInstances.includes(selectedInstance)) {
+      setFormData(prev => ({
+        ...prev,
+        allowedInstances: [...prev.allowedInstances, selectedInstance]
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const jsonData = {
+        "policy": {
+          "type": formData.policyType,
+          "data": [[]]
+        },
+        "current_instance": formData.currentInstance,
+        "allowed_instances": formData.allowedInstances.join(','),
+        "gitrepo": formData.gitRepo,
+        "termination_upon_no_use": formData.terminationUponNoUse
+      };
+      console.log('Sending data:', JSON.stringify(jsonData, null, 2));
+      const response = await axios.post('http://localhost:8000/create_app', jsonData);
+      if (response.status === 200) {
+        setAppId(response.data.appId); // Assuming the response contains an appId
+        setShowSuccessPopup(true);
+      }
+    } catch (error) {
+      setPopupMessage('Error submitting form. Please try again.');
+      setShowErrorPopup(true);
+      console.error('Error submitting form:', error);
+    }
+  };
+
+  const handleCloseErrorPopup = () => {
+    setShowErrorPopup(false);
+  };
+
+  const handleCloseSuccessPopup = () => {
+    setShowSuccessPopup(false);
+  };
+
+  const handleHomeNavigation = () => {
+    navigate('/');
+  };
+
+  const handleApplyPolicyNavigation = () => {
+    if (appId) {
+      navigate('/apply-policy', { state: { appId } });
+    } else {
+      console.error('AppId is not available');
+    }
+  };
+
+  return (
+    <div className="create-container">
+      <div className="create-header">
+        <FaUniversity  className="create-logo" />
+        <h1 className="create-title">Wells Fargo Cloud Cost Optimizer</h1>
+      </div>
+      <div className="create-card">
+        <h2 className="create-subtitle"><FaCloud className="create-icon" /> Create New App</h2>
+        <form onSubmit={handleSubmit} className="create-form">
+          <div className="create-form-row">
+            <div className="create-form-group">
+              <label htmlFor="policyType"><FaCalendarAlt className="create-icon" /> Policy Type:</label>
+              <select
+                id="policyType"
+                name="policyType"
+                value={formData.policyType}
+                onChange={handleInputChange}
+                className="create-select"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+
+            <div className="create-form-group">
+              <label htmlFor="currentInstance"><FaServer className="create-icon" /> Current Instance:</label>
+              <select
+                id="currentInstance"
+                name="currentInstance"
+                value={formData.currentInstance}
+                onChange={handleInputChange}
+                className="create-select"
+              >
+                <option value="">Select an instance</option>
+                <option value="t2micro">t2micro</option>
+                <option value="t3micro">t3micro</option>
+                <option value="t4micro">t4micro</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="create-form-group">
+            <label htmlFor="allowedInstances"><FaServer className="create-icon" /> Allowed Instances:</label>
+            <select
+              id="allowedInstances"
+              name="allowedInstances"
+              value=""
+              onChange={handleAllowedInstanceChange}
+              className="create-select"
+            >
+              <option value="">Add an allowed instance</option>
+              {availableInstances.map(instance => (
+                <option key={instance} value={instance}>{instance}</option>
+              ))}
+            </select>
+            <ul className="create-instance-list">
+              {formData.allowedInstances.map(instance => (
+                <li key={instance} className="create-instance-item">{instance}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="create-form-group">
+            <label htmlFor="gitRepo"><FaGit className="create-icon" /> Git Repository:</label>
+            <input
+              type="text"
+              id="gitRepo"
+              name="gitRepo"
+              value={formData.gitRepo}
+              onChange={handleInputChange}
+              className="create-input"
+              placeholder="https://github.com/yourusername/your-repo.git"
+            />
+          </div>
+
+          <div className="create-form-group create-checkbox-group">
+            <label htmlFor="terminationUponNoUse">
+              <input
+                type="checkbox"
+                id="terminationUponNoUse"
+                name="terminationUponNoUse"
+                checked={formData.terminationUponNoUse}
+                onChange={(e) => setFormData(prev => ({ ...prev, terminationUponNoUse: e.target.checked }))}
+                className="create-checkbox"
+              />
+              <FaCog className="create-icon" /> Terminate Upon No Use
+            </label>
+          </div>
+
+          <button type="submit" className="create-btn create-btn-submit">Create App</button>
+        </form>
+      </div>
+
+      {showErrorPopup && (
+        <InvalidLoginPopup
+          message={popupMessage}
+          onClose={handleCloseErrorPopup}
+        />
+      )}
+
+      {showSuccessPopup && (
+        <SuccessPopup
+          onClose={handleCloseSuccessPopup}
+          onHome={handleHomeNavigation}
+          onApplyPolicy={handleApplyPolicyNavigation}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Newapp;
+:root {
+    --wf-red: #D71E2B;
+    --wf-yellow: #FFCD11;
+    --wf-dark-gray: #333333;
+    --wf-light-gray: #F1F1F1;
+  }
+  
+  .create-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--wf-light-gray) 0%, #ffffff 100%);
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .create-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .create-logo {
+    font-size: 48px;
+    color: var(--wf-red);
+    margin-right: 20px;
+  }
+  
+  .create-title {
+    color: var(--wf-dark-gray);
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .create-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 800px;
+    transition: all 0.3s ease;
+  }
+  
+  .create-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+  
+  .create-subtitle {
+    color: var(--wf-red);
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  .create-form-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  
+  .create-form-group {
+    margin-bottom: 25px;
+    flex: 1;
+  }
+  
+  .create-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--wf-dark-gray);
+    font-weight: 500;
+  }
+  
+  .create-select,
+  .create-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--wf-light-gray);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .create-select:focus,
+  .create-input:focus {
+    border-color: var(--wf-yellow);
+    outline: none;
+  }
+  
+  .create-instance-list {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .create-instance-item {
+    background-color: var(--wf-yellow);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: var(--wf-dark-gray);
+  }
+  
+  .create-checkbox-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .create-checkbox {
+    margin-right: 10px;
+  }
+  
+  .create-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .create-btn-submit {
+    background-color: var(--wf-red);
+    color: white;
+    width: 100%;
+  }
+  
+  .create-btn-submit:hover {
+    background-color: #b51923;
+  }
+  
+  .create-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .create-popup-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .create-success-popup h2 {
+    color: var(--wf-red);
+    margin-bottom: 20px;
+  }
+  
+  .create-popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .create-btn-home,
+  .create-btn-apply {
+    background-color: var(--wf-red);
+    color: white;
+  }
+  
+  .create-btn-home:hover,
+  .create-btn-apply:hover {
+    background-color: #b51923;
+  }
+  
+  .create-btn-close {
+    background-color: var(--wf-dark-gray);
+    color: white;
+    margin-top: 15px;
+  }
+  
+  .create-btn-close:hover {
+    background-color: #222222;
+  }
+  
+  .create-icon {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .create-card,
+  .create-popup-content {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .create-form-group {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .create-form-group:nth-child(1) { animation-delay: 0.1s; }
+  .create-form-group:nth-child(2) { animation-delay: 0.2s; }
+  .create-form-group:nth-child(3) { animation-delay: 0.3s; }
+  .create-form-group:nth-child(4) { animation-delay: 0.4s; }
+  .create-form-group:nth-child(5) { animation-delay: 0.5s; }
