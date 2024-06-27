@@ -1,0 +1,347 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './AppDeletionPage.css';
+import InvalidLoginPopup from './InvalidLoginPopup';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCloudUploadAlt, faTrashAlt, faDollarSign, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+
+interface App {
+  id: string;
+  name: string;
+}
+
+const AppDeletionPage: React.FC = () => {
+  const [apps, setApps] = useState<App[]>([]);
+  const [selectedApp, setSelectedApp] = useState<string>('');
+  const [popupMessage, setPopupMessage] = useState<string>('');
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetchApps();
+  }, []);
+
+  const fetchApps = async () => {
+    try {
+      const response = await axios.get('/api/user-apps');
+      setApps(response.data);
+    } catch (error) {
+      console.error('Error fetching apps:', error);
+      setPopupMessage('Failed to fetch apps. Please try again.');
+      setShowPopup(true);
+    }
+  };
+
+  const handleAppDelete = async () => {
+    if (!selectedApp) {
+      setPopupMessage('Please select an app to delete');
+      setShowPopup(true);
+      return;
+    }
+    setShowConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await axios.post(`/developer/delete-app-config/${selectedApp}`);
+      if (response.status === 200) {
+        setPopupMessage('App deleted successfully');
+        setShowPopup(true);
+        setSelectedApp('');
+        fetchApps(); // Refresh the app list
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (error) {
+      console.error('Error deleting app:', error);
+      setPopupMessage('Failed to delete app. Please try again.');
+      setShowPopup(true);
+    } finally {
+      setShowConfirmation(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmation(false);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    setPopupMessage('');
+  };
+
+  return (
+    <div className="delete-app-deletion-container delete-wells-fargo-theme">
+      <h1 className="delete-title">
+        <FontAwesomeIcon icon={faCloudUploadAlt} className="delete-icon delete-cloud-icon" />
+        App Deletion for Cloud Optimization
+      </h1>
+      <p className="delete-description">
+        <FontAwesomeIcon icon={faDollarSign} className="delete-icon delete-dollar-icon" />
+        Select an app to delete and optimize your cloud costs
+      </p>
+      <div className="delete-select-container">
+        <select
+          value={selectedApp}
+          onChange={(e) => setSelectedApp(e.target.value)}
+          className="delete-app-select"
+        >
+          <option value="">Select an app</option>
+          {apps.map((app) => (
+            <option key={app.id} value={app.id}>
+              {app.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button onClick={handleAppDelete} className="delete-button delete-delete-button">
+        <FontAwesomeIcon icon={faTrashAlt} className="delete-icon delete-trash-icon" />
+        Delete App
+      </button>
+      {showPopup && (
+        <InvalidLoginPopup message={popupMessage} onClose={closePopup} />
+      )}
+      {showConfirmation && (
+        <div className="delete-confirmation-overlay">
+          <div className="delete-confirmation-popup">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="delete-icon delete-warning-icon" />
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to permanently delete this app?</p>
+            <div className="delete-confirmation-buttons">
+              <button onClick={confirmDelete} className="delete-button delete-confirm-button">Yes, Delete</button>
+              <button onClick={cancelDelete} className="delete-button delete-cancel-button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPopup && popupMessage === 'App deleted successfully' && (
+        <div className="delete-cloud-animation">
+          <div className="delete-cloud"></div>
+          <div className="delete-cloud"></div>
+          <div className="delete-cloud"></div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AppDeletionPage;
+/* AppDeletionPage.css */
+
+.delete-app-deletion-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.delete-wells-fargo-theme {
+  border-top: 4px solid #d71e2b;
+}
+
+.delete-title {
+  color: #d71e2b;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.delete-description {
+  color: #333;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.delete-icon {
+  margin-right: 0.5rem;
+}
+
+.delete-cloud-icon {
+  color: #4a90e2;
+}
+
+.delete-dollar-icon {
+  color: #2ecc71;
+}
+
+.delete-select-container {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.delete-app-select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #d71e2b;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  appearance: none;
+  padding-right: 2rem;
+}
+
+.delete-select-container::after {
+  content: '\25BC';
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  color: #d71e2b;
+  pointer-events: none;
+}
+
+.delete-delete-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  background-color: #d71e2b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-delete-button:hover {
+  background-color: #b5191f;
+}
+
+.delete-delete-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(215, 30, 43, 0.3);
+}
+
+.delete-trash-icon {
+  margin-right: 0.5rem;
+}
+
+.delete-cloud-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.delete-cloud {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: delete-float 3s ease-in-out infinite;
+}
+
+.delete-cloud:nth-child(1) {
+  width: 60px;
+  height: 60px;
+  left: -30px;
+  top: 20%;
+  animation-delay: 0s;
+}
+
+.delete-cloud:nth-child(2) {
+  width: 80px;
+  height: 80px;
+  right: -40px;
+  top: 50%;
+  animation-delay: 1s;
+}
+
+.delete-cloud:nth-child(3) {
+  width: 50px;
+  height: 50px;
+  left: 50%;
+  bottom: -25px;
+  animation-delay: 2s;
+}
+
+@keyframes delete-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.delete-confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-popup {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.delete-warning-icon {
+  font-size: 3rem;
+  color: #f39c12;
+  margin-bottom: 1rem;
+}
+
+.delete-confirmation-popup h2 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.delete-confirmation-popup p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.delete-confirmation-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.delete-confirm-button,
+.delete-cancel-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-confirm-button {
+  background-color: #d71e2b;
+  color: white;
+}
+
+.delete-confirm-button:hover {
+  background-color: #b5191f;
+}
+
+.delete-cancel-button {
+  background-color: #ccc;
+  color: #333;
+}
+
+.delete-cancel-button:hover {
+  background-color: #bbb;
+}
