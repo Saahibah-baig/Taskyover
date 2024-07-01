@@ -1,0 +1,292 @@
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { FaPlusCircle, FaMinusCircle, FaClock, FaServer } from 'react-icons/fa';
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import './Daily.css';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+interface Action {
+  id: string;
+  time: string;
+  action: string;
+}
+
+function Daily() {
+  const [actions, setActions] = useState<Action[]>([]);
+  const [timeInput, setTimeInput] = useState<string>('');
+  const [actionInput, setActionInput] = useState<string>('');
+  const [currentDate, setCurrentDate] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentDate(formatDate(new Date()));
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const handleAddNewAction = () => {
+    if (timeInput && actionInput) {
+      const newAction: Action = { 
+        id: Math.random().toString(36).substr(2, 9),
+        time: timeInput, 
+        action: actionInput,
+      };
+      setActions(prevActions => [...prevActions, newAction].sort((a, b) => a.time.localeCompare(b.time)));
+      setTimeInput('');
+      setActionInput('');
+    } else {
+      alert('Please fill in all fields.');
+    }
+  };
+
+  const handleRemoveAction = (id: string) => {
+    setActions(prevActions => prevActions.filter(action => action.id !== id));
+  };
+
+  const calculateServerStatus = (): number[] => {
+    let status = 50; // Starting at 50% capacity
+    const dataPoints = new Array(24).fill(status);
+
+    actions.forEach(action => {
+      const hour = parseInt(action.time.split(':')[0]);
+      let change = 0;
+      switch (action.action) {
+        case 'Scale Up':
+          change = 10;
+          break;
+        case 'Scale Down':
+          change = -10;
+          break;
+        case 'Terminate':
+          change = -status;
+          break;
+        case 'Restart':
+          change = 0;
+          break;
+        default:
+          break;
+      }
+      for (let i = hour; i < 24; i++) {
+        dataPoints[i] = Math.max(0, Math.min(100, dataPoints[i] + change));
+      }
+    });
+
+    return dataPoints;
+  };
+
+  const chartData = {
+    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+    datasets: [
+      {
+        label: 'Server Status',
+        data: calculateServerStatus(),
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Daily Server Status Forecast',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        title: {
+          display: true,
+          text: 'Server Status (%)'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Time'
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="daily-container">
+      <div className="daily-date-header">
+        <h2>{currentDate}</h2>
+        <div className="daily-clock">
+          <FaClock className="daily-clock-icon" />
+          <span>{currentTime}</span>
+        </div>
+      </div>
+      <div className="daily-content">
+        <div className="daily-left-panel">
+          <h2>Server Management Schedule</h2>
+          <div className="daily-action-inputs">
+            <input
+              type="time"
+              className="daily-time"
+              value={timeInput}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setTimeInput(e.target.value)}
+            />
+            <select
+              value={actionInput}
+              className="daily-action"
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setActionInput(e.target.value)}
+            >
+              <option value="">Select Action</option>
+              <option value="Scale Up">Scale Up</option>
+              <option value="Scale Down">Scale Down</option>
+              <option value="Terminate">Terminate</option>
+              <option value="Restart">Restart</option>
+            </select>
+            <FaPlusCircle className="daily-fa-plus" onClick={handleAddNewAction} />
+          </div>
+          <div className="daily-action-list">
+            {actions.map((action) => (
+              <div key={action.id} className="daily-action-item">
+                <span>{action.time}</span>
+                <span>{action.action}</span>
+                <FaMinusCircle 
+                  className="daily-minus" 
+                  onClick={() => handleRemoveAction(action.id)} 
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="daily-right-panel">
+          <div className="daily-graph">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+          <div className="daily-summary">
+            <h3>Server Status Summary</h3>
+            <p><FaServer /> Current Status: {calculateServerStatus()[new Date().getHours()]}%</p>
+            <p><FaServer /> Peak Status: {Math.max(...calculateServerStatus())}%</p>
+            <p><FaServer /> Lowest Status: {Math.min(...calculateServerStatus())}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Daily;
+:root {
+    --wf-red: #D71E28;
+    --wf-yellow: #FFCD41;
+    --wf-dark-gray: #333333;
+    --wf-light-gray: #F0F0F0;
+  }
+  
+  .daily-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .daily-date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--wf-red);
+    color: white;
+  }
+  
+  .daily-clock {
+    display: flex;
+    align-items: center;
+  }
+  
+  .daily-clock-icon {
+    margin-right: 10px;
+  }
+  
+  .daily-content {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .daily-left-panel, .daily-right-panel {
+    flex: 1;
+  }
+  
+  .daily-action-inputs {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+  
+  .daily-time, .daily-action {
+    padding: 8px;
+    border: 1px solid var(--wf-light-gray);
+    border-radius: 4px;
+  }
+  
+  .daily-fa-plus {
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--wf-red);
+  }
+  
+  .daily-action-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--wf-light-gray);
+    border-radius: 4px;
+  }
+  
+  .daily-action-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--wf-light-gray);
+  }
+  
+  .daily-minus {
+    cursor: pointer;
+    color: var(--wf-red);
+  }
+  
+  .daily-graph {
+    height: 400px;
+    margin-bottom: 20px;
+  }
+  
+  .daily-summary {
+    background-color: var(--wf-light-gray);
+    padding: 15px;
+    border-radius: 5px;
+  }
+  
+  .daily-summary h3 {
+    margin-top: 0;
+    color: var(--wf-red);
+  }
+  
+  @media (max-width: 768px) {
+    .daily-content {
+      flex-direction: column;
+    }
+  }
