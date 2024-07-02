@@ -188,105 +188,106 @@ function Daily() {
 
 export default Daily;
 :root {
-    --wf-red: #D71E28;
-    --wf-yellow: #FFCD41;
-    --wf-dark-gray: #333333;
-    --wf-light-gray: #F0F0F0;
-  }
-  
-  .daily-container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  
-  .daily-date-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: var(--wf-red);
-    color: white;
-  }
-  
-  .daily-clock {
-    display: flex;
-    align-items: center;
-  }
-  
-  .daily-clock-icon {
-    margin-right: 10px;
-  }
-  
+  --wf-red: #D71E28;
+  --wf-yellow: #FFCD41;
+  --wf-dark-gray: #333333;
+  --wf-light-gray: #F0F0F0;
+  --base-font-size: 16px;
+}
+
+.daily-container {
+  padding: 1.25rem;
+  font-family: Arial, sans-serif;
+  max-width: 75rem;
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 0 0.625rem rgba(0,0,0,0.1);
+}
+
+.daily-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding: 0.625rem;
+  background-color: var(--wf-red);
+  color: white;
+}
+
+.daily-clock {
+  display: flex;
+  align-items: center;
+}
+
+.daily-clock-icon {
+  margin-right: 0.625rem;
+}
+
+.daily-content {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.daily-left-panel, .daily-right-panel {
+  flex: 1;
+}
+
+.daily-action-inputs {
+  display: flex;
+  margin-bottom: 1.25rem;
+  gap: 0.625rem;
+}
+
+.daily-time, .daily-action {
+  padding: 0.5rem;
+  border: 0.0625rem solid var(--wf-light-gray);
+  border-radius: 0.25rem;
+}
+
+.daily-fa-plus {
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: var(--wf-red);
+}
+
+.daily-action-list {
+  max-height: 18.75rem;
+  overflow-y: auto;
+  border: 0.0625rem solid var(--wf-light-gray);
+  border-radius: 0.25rem;
+}
+
+.daily-action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem;
+  border-bottom: 0.0625rem solid var(--wf-light-gray);
+}
+
+.daily-minus {
+  cursor: pointer;
+  color: var(--wf-red);
+}
+
+.daily-graph {
+  height: 25rem;
+  margin-bottom: 1.25rem;
+}
+
+.daily-summary {
+  background-color: var(--wf-light-gray);
+  padding: 0.9375rem;
+  border-radius: 0.3125rem;
+}
+
+.daily-summary h3 {
+  margin-top: 0;
+  color: var(--wf-red);
+}
+
+@media (max-width: 48rem) {
   .daily-content {
-    display: flex;
-    gap: 20px;
+    flex-direction: column;
   }
-  
-  .daily-left-panel, .daily-right-panel {
-    flex: 1;
-  }
-  
-  .daily-action-inputs {
-    display: flex;
-    margin-bottom: 20px;
-    gap: 10px;
-  }
-  
-  .daily-time, .daily-action {
-    padding: 8px;
-    border: 1px solid var(--wf-light-gray);
-    border-radius: 4px;
-  }
-  
-  .daily-fa-plus {
-    cursor: pointer;
-    font-size: 24px;
-    color: var(--wf-red);
-  }
-  
-  .daily-action-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid var(--wf-light-gray);
-    border-radius: 4px;
-  }
-  
-  .daily-action-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid var(--wf-light-gray);
-  }
-  
-  .daily-minus {
-    cursor: pointer;
-    color: var(--wf-red);
-  }
-  
-  .daily-graph {
-    height: 400px;
-    margin-bottom: 20px;
-  }
-  
-  .daily-summary {
-    background-color: var(--wf-light-gray);
-    padding: 15px;
-    border-radius: 5px;
-  }
-  
-  .daily-summary h3 {
-    margin-top: 0;
-    color: var(--wf-red);
-  }
-  
-  @media (max-width: 768px) {
-    .daily-content {
-      flex-direction: column;
-    }
-  }
+}
